@@ -1,96 +1,78 @@
-from datetime import datetime, timedelta
-
-def generate_dates(start_year, start_month, start_day):
-    # 设置起始日期
-    start_date = datetime(start_year, start_month, start_day)
-
-    # 找到结束日期（当月的月底）
-    if start_day == 1:
-        end_date = start_date.replace(day=1, month=start_date.month+1) - timedelta(days=1)
-    else:
-        end_date = start_date.replace(day=1, month=start_date.month+1) - timedelta(days=start_day)
-
-    # 生成日期列表
-    dates = []
-    current_date = end_date
-    while current_date >= start_date:
-        # 添加日期到列表
-        dates.append(current_date.strftime("## %Y_%m%d %a"))
-        # 减少一天
-        current_date -= timedelta(days=1)
-
-    return dates
-
-# 调用函数生成4月份的日期
-dates = generate_dates(2024, 5, 1)
-
-# 打印生成的日期ggg
-for date in dates:
-    print(dateimport sublime
+import sublime
 import sublime_plugin
 from datetime import datetime, timedelta
 
 class InsertMonthDatesCommand(sublime_plugin.TextCommand):
-    def run(self, edit, year=None, month=None):
-        if year is None or month is None:
-            sublime.message_dialog("Please provide the year and month.")
-            return
+    def run(self, edit):
+        # Show input panel to get year
+        self.view.window().show_input_panel("Please enter the year:", "", self.on_year_input, None, None)
 
+    def on_year_input(self, year):
+        # Validate the year
         try:
-            month_date = datetime(year, month, 1)
+            year = int(year)
         except ValueError:
-            sublime.message_dialog("Invalid year or month.")
+            sublime.error_message("Invalid year. Please enter a valid year.")
             return
 
-        last_day = self.get_last_day_of_month(year, month)
+        # Show input panel to get month
+        self.view.window().show_input_panel("Please enter the month:", "", lambda month: self.on_month_input(year, month), None, None)
 
-        for i in range(last_day, 0, -1):
-            date = datetime(year, month, i)
-            formatted_date = date.strftime("%Y_%m%d %a").upper()
-            self.view.insert(edit, self.view.size(), f"## {formatted_date}\n")
+    def on_month_input(self, year, month):
+        # Validate the month
+        try:
+            month = int(month)
+            if month < 1 or month > 12:
+                raise ValueError
+        except ValueError:
+            sublime.error_message("Invalid month. Please enter a valid month (1-12).")
+            return
 
-        month_name = month_date.strftime("%B").upper()
-        self.view.insert(edit, self.view.size(), f"## {month_name}\n")
+        # Generate and insert month dates
+        self.insert_month_dates(year, month)
 
-    def get_last_day_of_month(self, year, month):
-        if month == 12:
-            return 31
-        else:
-            next_month = datetime(year, month + 1, 1)
-            return (next_month - timedelta(days=1)).day
+    def insert_month_dates(self, year, month):
+        month_name = datetime(year, month, 1).strftime("%B").upper()
+        month_content = ""
+        for day in range(31, 0, -1):
+            try:
+                date = datetime(year, month, day)
+                formatted_date = date.strftime("%Y_%m%d %a").upper()
+                month_content += f"## {formatted_date}\n"
+            except ValueError:
+                continue
+        month_content += f"## {month_name}\n"
+        self.view.run_command("insert_snippet", {"contents": month_content})
 
-def plugin_loaded():
-    sublime_plugin.register_command("insert_month_dates", InsertMonthDatesCommand)
-
-## 2024_0430 TUE
-## 2024_0429 MON
-## 2024_0428 SUN
-## 2024_0427 SAT
-## 2024_0426 FRI
-## 2024_0425 THU
-## 2024_0424 WED
-## 2024_0423 TUE
-## 2024_0422 MON
-## 2024_0421 SUN
-## 2024_0420 SAT
-## 2024_0419 FRI
-## 2024_0418 THU
-## 2024_0417 WED
-## 2024_0416 TUE
-## 2024_0415 MON
-## 2024_0414 SUN
-## 2024_0413 SAT
-## 2024_0412 FRI
-## 2024_0411 THU
-## 2024_0410 WED
-## 2024_0409 TUE
-## 2024_0408 MON
-## 2024_0407 SUN
-## 2024_0406 SAT
-## 2024_0405 FRI
-## 2024_0404 THU
-## 2024_0403 WED
-## 2024_0402 TUE
-## 2024_0401 MON
-## APRIL
-)
+## 2024_0531 FRI
+## 2024_0530 THU
+## 2024_0529 WED
+## 2024_0528 TUE
+## 2024_0527 MON
+## 2024_0526 SUN
+## 2024_0525 SAT
+## 2024_0524 FRI
+## 2024_0523 THU
+## 2024_0522 WED
+## 2024_0521 TUE
+## 2024_0520 MON
+## 2024_0519 SUN
+## 2024_0518 SAT
+## 2024_0517 FRI
+## 2024_0516 THU
+## 2024_0515 WED
+## 2024_0514 TUE
+## 2024_0513 MON
+## 2024_0512 SUN
+## 2024_0511 SAT
+## 2024_0510 FRI
+## 2024_0509 THU
+## 2024_0508 WED
+## 2024_0507 TUE
+## 2024_0506 MON
+## 2024_0505 SUN
+## 2024_0504 SAT
+## 2024_0503 FRI
+## 2024_0502 THU
+## 2024_0501 WED
+## MAY
